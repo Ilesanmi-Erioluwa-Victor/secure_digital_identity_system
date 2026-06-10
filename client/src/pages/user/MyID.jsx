@@ -16,7 +16,11 @@ export default function MyID() {
   useEffect(() => {
     api.getMyIdentity()
       .then((res) => setIdentity(res.identity || res))
-      .catch(() => toast.error('Failed to load your identity'))
+      .catch((err) => {
+        if (err.response?.status !== 404) {
+          toast.error('Failed to load your identity');
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
