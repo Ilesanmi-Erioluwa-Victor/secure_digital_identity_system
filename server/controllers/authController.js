@@ -131,6 +131,11 @@ const login = asyncHandler(async (req, res) => {
       });
     } catch (emailErr) {
       console.error('OTP email failed:', emailErr.message);
+      console.log(`\n========== DEV OTP ==========`);
+      console.log(`  Email: ${user.email}`);
+      console.log(`  OTP:   ${otp}`);
+      console.log(`  Expires in 5 minutes`);
+      console.log(`=============================\n`);
     }
 
     await logAccess({
@@ -203,7 +208,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
     throw new Error('Email and OTP are required');
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+  const user = await User.findOne({ email: email.toLowerCase() }).select('+password +otpCode +otpExpiry');
   if (!user) {
     res.status(401);
     throw new Error('User not found');

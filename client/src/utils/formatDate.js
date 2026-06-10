@@ -29,7 +29,8 @@ export function formatDate(date, format = 'PPP') {
     },
   }[format] || { year: 'numeric', month: 'short', day: 'numeric' };
 
-  return d.toLocaleDateString('en-US', options);
+  const hasTime = options.hour || options.minute || options.second;
+  return hasTime ? d.toLocaleString('en-US', options) : d.toLocaleDateString('en-US', options);
 }
 
 export function formatRelativeDate(date) {

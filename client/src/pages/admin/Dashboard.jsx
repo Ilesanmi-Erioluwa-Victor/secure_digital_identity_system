@@ -154,52 +154,68 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Identity Status Breakdown</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {statusPieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {statusPieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {statusPieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No identity data available</p>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Identities Issued Per Month (Last 12)</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={monthlyIssuance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#0A3D6B" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {monthlyIssuance.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={monthlyIssuance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#0A3D6B" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No issuance data available</p>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Daily QR Scan Activity (Last 14 Days)</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={dailyScans}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="scans" fill="#1565A8" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {dailyScans.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={dailyScans}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="scans" fill="#1565A8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No scan data available</p>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Identities by Role</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={roleBreakdown} cx="50%" cy="50%" outerRadius={100} dataKey="count" nameKey="role" label={({ role, count }) => `${role} (${count})`}>
-                  {roleBreakdown.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {Array.isArray(roleBreakdown) && roleBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={roleBreakdown} cx="50%" cy="50%" outerRadius={100} dataKey="count" nameKey="role" label={({ role, count }) => `${role} (${count})`}>
+                    {roleBreakdown.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No role data available</p>
+            )}
           </div>
         </div>
 
