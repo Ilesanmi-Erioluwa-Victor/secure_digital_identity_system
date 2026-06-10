@@ -211,7 +211,6 @@ const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email: email.toLowerCase() }).select('+password +otpCode +otpExpiry').lean();
-  console.log(`[verifyOtp] user found: ${!!user}, otpCode: ${user?.otpCode ? 'present (' + user.otpCode.substring(0,10) + '...)' : 'MISSING'}, otpExpiry: ${user?.otpExpiry ? user.otpExpiry : 'MISSING'}`);
   if (!user) {
     res.status(401);
     throw new Error('User not found');

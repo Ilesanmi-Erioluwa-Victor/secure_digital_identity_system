@@ -17,6 +17,7 @@ export default function OTPVerify() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const expiryTimer = useRef(null);
   const resendTimer = useRef(null);
+  const submittedRef = useRef(false);
 
   const email = state?.email;
 
@@ -73,13 +74,15 @@ export default function OTPVerify() {
       setError(message);
       toast.error(message);
       setOtp('');
+      submittedRef.current = false;
     } finally {
       setLoading(false);
     }
   }, [email, verifyOtp, navigate]);
 
   useEffect(() => {
-    if (otp.length === 6 && !loading) {
+    if (otp.length === 6 && !loading && !submittedRef.current) {
+      submittedRef.current = true;
       handleVerify(otp);
     }
   }, [otp, loading, handleVerify]);
