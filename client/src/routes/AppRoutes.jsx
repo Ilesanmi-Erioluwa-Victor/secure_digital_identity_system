@@ -15,6 +15,7 @@ import AdminNewIdentity from '../pages/admin/IssueIdentity';
 import AdminIdentityDetail from '../pages/admin/IdentityDetail';
 import AdminUsers from '../pages/admin/UserManagement';
 import AdminLogs from '../pages/admin/AccessLogs';
+import AdminRegisterAdmin from '../pages/admin/RegisterAdmin';
 import AdminReports from '../pages/admin/Reports';
 import AdminSettings from '../pages/admin/Settings';
 
@@ -85,6 +86,16 @@ export default function AppRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={['admin']}>
               <AdminUsers />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users/register-admin"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={['admin']}>
+              <AdminRegisterAdmin />
             </RoleRoute>
           </ProtectedRoute>
         }

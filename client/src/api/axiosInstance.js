@@ -19,6 +19,17 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -41,13 +52,14 @@ axiosInstance.interceptors.response.use(
 
       try {
         const { data } = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
-        const newToken = data.token;
+        const newToken = data.accessToken;
+        localStorage.setItem('accessToken', newToken);
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem('auth-storage');
+        localStorage.removeItem('accessToken');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

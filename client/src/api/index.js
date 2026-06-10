@@ -75,6 +75,9 @@ const api = {
   createUser: (data) =>
     axiosInstance.post('/users', data).then((res) => res.data),
 
+  registerAdmin: (data) =>
+    axiosInstance.post('/users/register-admin', data).then((res) => res.data),
+
   getAllUsers: (params) =>
     axiosInstance.get('/users', { params }).then((res) => res.data),
 
