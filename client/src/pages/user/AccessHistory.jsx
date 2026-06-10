@@ -29,7 +29,6 @@ export default function AccessHistory() {
       setLogs(res.logs || res.data || []);
       setTotalPages(res.totalPages || res.pages || Math.ceil((res.total || 0) / limit) || 1);
     } catch {
-      toast.error('Failed to load access history');
       setLogs([]);
     } finally {
       setLoading(false);
