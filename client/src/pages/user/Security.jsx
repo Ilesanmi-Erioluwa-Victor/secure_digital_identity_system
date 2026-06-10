@@ -6,7 +6,6 @@ import PageWrapper from '../../components/layout/PageWrapper';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Badge from '../../components/common/Badge';
-import Spinner from '../../components/common/Spinner';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Modal from '../../components/common/Modal';
 import TOTPSetup from '../../components/features/TOTPSetup';
@@ -17,31 +16,18 @@ export default function Security() {
   const { user } = useAuth();
   const { control, handleSubmit, watch, reset, formState: { errors } } = useForm();
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [totpStatus, setTotpStatus] = useState(null);
-  const [totpLoading, setTotpLoading] = useState(true);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [disablePassword, setDisablePassword] = useState('');
   const [disabling, setDisabling] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [setupData, setSetupData] = useState(null);
+  const [totpEnabled, setTotpEnabled] = useState(user?.isTOTPEnabled || false);
 
   const newPassword = watch('newPassword', '');
 
   useEffect(() => {
-    loadTOTPStatus();
-  }, []);
-
-  const loadTOTPStatus = async () => {
-    setTotpLoading(true);
-    try {
-      const res = await api.getTOTPSetup();
-      setTotpStatus(res);
-    } catch {
-      setTotpStatus(null);
-    } finally {
-      setTotpLoading(false);
-    }
-  };
+    setTotpEnabled(user?.isTOTPEnabled || false);
+  }, [user]);
 
   const getStrength = (pwd) => {
     let score = 0;
@@ -86,13 +72,22 @@ export default function Security() {
     }
   };
 
+  const refreshTOTPStatus = async () => {
+    try {
+      const res = await api.getMe();
+      setTotpEnabled(res.user?.isTOTPEnabled || false);
+    } catch {
+      setTotpEnabled(false);
+    }
+  };
+
   const handleVerifyTOTP = async (token) => {
     try {
       await api.enableTOTP(token, setupData?.secret);
       toast.success('Authenticator app enabled successfully');
       setShowSetup(false);
       setSetupData(null);
-      loadTOTPStatus();
+      refreshTOTPStatus();
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to verify code';
       toast.error(message);
@@ -111,7 +106,7 @@ export default function Security() {
       toast.success('Authenticator app disabled');
       setShowDisableDialog(false);
       setDisablePassword('');
-      loadTOTPStatus();
+      refreshTOTPStatus();
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to disable authenticator app';
       toast.error(message);
@@ -119,8 +114,6 @@ export default function Security() {
       setDisabling(false);
     }
   };
-
-  const totpEnabled = totpStatus?.enabled || totpStatus?.totpEnabled || false;
 
   return (
     <PageWrapper title="Security Settings" role="user">
@@ -234,11 +227,7 @@ export default function Security() {
             <h2 className="text-base font-semibold text-neutral-900">Two-Factor Authentication</h2>
           </div>
           <div className="p-6">
-            {totpLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner />
-              </div>
-            ) : showSetup && setupData ? (
+            {showSetup && setupData ? (
               <TOTPSetup setupData={setupData} onEnabled={handleVerifyTOTP} />
             ) : (
               <div className="space-y-4">
