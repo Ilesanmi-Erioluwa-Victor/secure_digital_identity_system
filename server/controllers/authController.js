@@ -119,9 +119,12 @@ const login = asyncHandler(async (req, res) => {
   if (user.isMFAEnabled) {
     const otp = generateOTP();
     const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { otpCode: hashedOtp, otpExpiry: new Date(Date.now() + 5 * 60 * 1000) } }
+    );
     user.otpCode = hashedOtp;
     user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-    await user.save();
 
     try {
       await sendEmail({
@@ -208,7 +211,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
     throw new Error('Email and OTP are required');
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() }).select('+password +otpCode +otpExpiry');
+  const user = await User.findOne({ email: email.toLowerCase() }).select('+password +otpCode +otpExpiry').lean();
   if (!user) {
     res.status(401);
     throw new Error('User not found');
@@ -220,9 +223,10 @@ const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   if (new Date() > user.otpExpiry) {
-    user.otpCode = undefined;
-    user.otpExpiry = undefined;
-    await user.save();
+    await User.updateOne(
+      { _id: user._id },
+      { $unset: { otpCode: '', otpExpiry: '' } }
+    );
     res.status(401);
     throw new Error('OTP has expired. Please login again.');
   }
@@ -242,9 +246,10 @@ const verifyOtp = asyncHandler(async (req, res) => {
     throw new Error('Invalid OTP code');
   }
 
-  user.otpCode = undefined;
-  user.otpExpiry = undefined;
-  await user.save();
+  await User.updateOne(
+    { _id: user._id },
+    { $unset: { otpCode: '', otpExpiry: '' } }
+  );
 
   const tokens = generateTokens(user._id, user.role);
   const hashedRefresh = hashToken(tokens.refreshToken);
