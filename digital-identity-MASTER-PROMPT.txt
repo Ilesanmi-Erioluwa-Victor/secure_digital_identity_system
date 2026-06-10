@@ -1,0 +1,1240 @@
+================================================================
+MASTER CODEX PROMPT + PROJECT DOCUMENTATION
+DESIGN AND IMPLEMENTATION OF A SECURE DIGITAL IDENTITY SYSTEM
+(A CASE STUDY OF DELTA STATE POLYTECHNIC LIBRARY)
+Academic Final Year Project — Delta State Polytechnic, Otefe-Oghara
+HND II | Approved: 2/6/26
+================================================================
+
+================================================================
+SECTION A: PROJECT DOCUMENTATION
+================================================================
+
+PROJECT TITLE
+-------------
+Design and Implementation of a Secure Digital Identity System
+(A Case Study of Delta State Polytechnic Library)
+
+ABSTRACT
+--------
+The management of user identities in institutional settings such as
+a polytechnic library presents significant challenges including
+unauthorized access, identity fraud, and inefficient manual
+verification processes. This project presents the design and
+implementation of a Secure Digital Identity System for the Delta
+State Polytechnic Library. The system provides each library user
+(student, staff, or external member) with a unique verifiable
+digital identity in the form of a QR-code-backed digital ID card.
+It enables secure login using multi-factor authentication, manages
+role-based access to library resources, tracks identity verification
+activities, and generates an audit trail of all access events.
+Administrators can issue, revoke, suspend, and renew digital
+identities. The system replaces physical ID card dependency with
+a secure, centralized, and easily verifiable digital identity
+infrastructure that reflects real-world institutional identity
+management practices.
+
+TECH STACK
+----------
+Layer              | Technology
+-------------------|--------------------------------------------
+Frontend           | React.js (Vite) + Tailwind CSS
+Backend            | Node.js + Express.js
+Database           | MongoDB (Mongoose ODM)
+Authentication     | JWT (Access + Refresh Tokens) + bcryptjs
+Two-Factor Auth    | TOTP via otplib + speakeasy (OTP codes)
+QR Code Generation | qrcode (npm) — server-side QR generation
+QR Verification    | jsQR or html5-qrcode (client-side scanner)
+Email Service      | Nodemailer (OTP emails, alerts, notifications)
+PDF/ID Card Gen    | pdfkit (digital ID card PDF generation)
+File Uploads       | Multer (profile photos)
+Encryption         | crypto (Node.js built-in) for token hashing
+Scheduler          | node-cron (expired identity checks daily)
+Charts             | Recharts (admin dashboard analytics)
+Environment        | dotenv
+Form Handling      | react-hook-form
+Notifications      | react-hot-toast
+Icons              | @heroicons/react
+HTTP Client        | Axios
+
+WHY THIS STACK?
+---------------
+- JWT (Access + Refresh Tokens): Access tokens expire in 15 minutes
+  for security. Refresh tokens (7 days) silently renew sessions
+  without re-login, balancing security and usability — a standard
+  practice in modern identity systems.
+
+- otplib + speakeasy: Implements Time-based One-Time Passwords
+  (TOTP) for two-factor authentication, the same standard used by
+  Google Authenticator. This adds a second verification layer
+  beyond passwords, critical for an identity system.
+
+- qrcode (server-side): QR codes are generated server-side and
+  embedded in digital ID cards. Each QR encodes a signed, encrypted
+  verification URL. When scanned by a librarian, it hits the backend
+  verification endpoint which confirms the identity's validity,
+  status, and ownership — without exposing raw user data in the QR.
+
+- MongoDB: Flexible schema suits identity records which can vary
+  across user types (student has matric number, staff has staff ID,
+  external has NIN). Document model stores identity metadata,
+  verification history, and access logs naturally.
+
+- crypto (built-in): Used for generating cryptographically secure
+  random tokens for email verification, password reset, and identity
+  verification links — no third-party dependency needed.
+
+WHAT EACH FEATURE DOES
+-----------------------
+
+1. DIGITAL IDENTITY ISSUANCE
+   The admin registers a user and issues them a unique Digital
+   Identity. Each identity has: a system-generated Digital ID Number
+   (DID-POLY-XXXXXX), a profile photo, biographic details, role
+   and access level, issue date, expiry date, and a QR code. The QR
+   code encodes a signed verification URL unique to that identity.
+   The digital ID is downloadable as a PDF card resembling a
+   physical library ID card.
+
+2. MULTI-FACTOR AUTHENTICATION (MFA)
+   Login requires two factors:
+   Factor 1 — Email + Password (bcrypt-verified)
+   Factor 2 — OTP sent to the user's registered email (6-digit,
+   expires in 10 minutes) OR TOTP from an authenticator app if
+   the user has enabled app-based 2FA.
+   MFA can be toggled per user by admin. High-privilege roles
+   (Admin, Librarian) always require MFA — it cannot be disabled
+   for them.
+
+3. QR CODE IDENTITY VERIFICATION
+   Librarians use a built-in QR scanner page to scan a member's
+   digital ID QR code. The scan decodes the verification URL and
+   hits the backend /api/identity/verify/:token endpoint. The
+   backend checks: identity exists, status is Active, not expired,
+   and the verification token matches the stored signed hash. The
+   response shows: photo, name, ID number, role, access level,
+   expiry date, and a large VALID / INVALID / SUSPENDED / EXPIRED
+   status banner. Every scan is logged in the AccessLog.
+
+4. IDENTITY LIFECYCLE MANAGEMENT
+   Admins manage the full identity lifecycle:
+   - Issue: create new digital identity for a user
+   - Activate: set status to Active (default after issue)
+   - Suspend: temporarily block access (with reason)
+   - Revoke: permanently invalidate identity
+   - Renew: extend expiry date (generates new QR token)
+   - Replace: issue new identity (e.g. after name change)
+   Each lifecycle event is logged with the admin's ID, reason,
+   and timestamp.
+
+5. ROLE-BASED ACCESS LEVELS
+   Each identity carries an Access Level that determines which
+   library resources the user can access:
+   - Level 1 (Student): borrow books, access reading room
+   - Level 2 (Staff): Level 1 + access reference section,
+     request inter-library loans
+   - Level 3 (Librarian): Level 2 + manage collections
+   - Level 4 (Admin): full system access
+   The access level is encoded in the digital identity and
+   displayed during QR verification.
+
+6. ACCESS LOG / AUDIT TRAIL
+   Every identity verification scan, login attempt (success or
+   failure), identity status change, and admin action is recorded
+   in the AccessLog with: user/identity ID, action type, outcome
+   (success/failure/suspicious), IP address, device/browser info,
+   and timestamp. Admins can view, search, filter, and export
+   the full audit trail.
+
+7. IDENTITY EXPIRY AND RENEWAL AUTOMATION
+   Each digital identity has an expiry date (default 1 year from
+   issue). A node-cron job runs daily and:
+   - Sends expiry warning email 30 days before expiry
+   - Sends final warning 7 days before expiry
+   - Automatically sets status to Expired on the expiry date
+   Admin can renew expired identities — generates a new expiry
+   date and a new QR verification token.
+
+8. DASHBOARD AND ANALYTICS
+   Admin dashboard shows: total identities issued, active count,
+   suspended count, expired count, today's verifications, recent
+   access log entries, identity status breakdown chart, and
+   monthly issuance trend chart.
+
+9. USER SELF-SERVICE PORTAL
+   Authenticated users can: view their own digital identity card,
+   download their PDF ID card, update their profile photo, change
+   their password, enable/disable app-based 2FA (with QR setup
+   for Google Authenticator), and view their own access/scan history.
+
+10. SECURITY FEATURES
+    - Bcrypt password hashing (saltRounds: 10)
+    - Short-lived JWT access tokens (15 minutes)
+    - Refresh token rotation (7 days, stored in httpOnly cookie)
+    - Rate limiting on login endpoint (max 5 attempts per 15 min)
+    - Account lockout after 5 failed login attempts (30 min lock)
+    - All QR verification tokens are HMAC-signed with a server secret
+    - Identity verification tokens are hashed before storage
+    - Full audit trail of all actions
+    - CORS restricted to frontend origin
+
+HOW TO RUN THE PROJECT
+----------------------
+
+Prerequisites:
+  Node.js v18+, MongoDB v6+, npm v9+
+
+Step 1 — Backend setup:
+  cd server
+  npm install
+  Copy .env.example → .env and fill in values
+  npm run dev    (nodemon, port 5000)
+
+Step 2 — Frontend setup:
+  cd client
+  npm install
+  npm run dev    (Vite, port 5173)
+
+Step 3 — Open browser:
+  http://localhost:5173
+
+Step 4 — Login with seed credentials:
+  Admin     : admin@dspoly.edu.ng     / Admin@1234
+  Librarian : librarian@dspoly.edu.ng / Lib@1234
+  Student   : student@dspoly.edu.ng   / Student@1234
+  Staff     : staff@dspoly.edu.ng     / Staff@1234
+
+ENVIRONMENT VARIABLES (.env)
+-----------------------------
+PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb://localhost:27017/digital_identity_db
+JWT_ACCESS_SECRET=your_access_token_secret_here
+JWT_REFRESH_SECRET=your_refresh_token_secret_here
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_EXPIRES=7d
+IDENTITY_VERIFY_SECRET=your_qr_signing_secret_here
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=youremail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+EMAIL_FROM=DSPoly Library Identity System <youremail@gmail.com>
+CLIENT_URL=http://localhost:5173
+INSTITUTION_NAME=Delta State Polytechnic Library
+INSTITUTION_ADDRESS=Otefe-Oghara, Delta State, Nigeria
+INSTITUTION_PHONE=+234 800 000 0000
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=5
+ACCOUNT_LOCKOUT_ATTEMPTS=5
+ACCOUNT_LOCKOUT_DURATION_MIN=30
+IDENTITY_DEFAULT_EXPIRY_MONTHS=12
+IDENTITY_EXPIRY_WARNING_DAYS=30
+
+================================================================
+SECTION B: CODEX GENERATION PROMPT
+================================================================
+
+PROJECT OVERVIEW FOR CODEX
+---------------------------
+Build a full-stack Secure Digital Identity System for a polytechnic
+library. The system issues verifiable digital identity cards with
+QR codes to library users. It supports multi-factor authentication
+(email OTP + optional TOTP), identity lifecycle management (issue,
+activate, suspend, revoke, renew), QR-based identity verification
+at library entry points, role-based access levels, a full audit
+trail of all access events, and automated expiry management.
+
+Tech Stack: React.js (Vite) + Tailwind CSS + Node.js + Express.js
++ MongoDB (Mongoose) + JWT (access + refresh) + bcryptjs +
+otplib/speakeasy + qrcode + Multer + Nodemailer + pdfkit +
+node-cron + Recharts
+
+================================================================
+COLOR PALETTE
+================================================================
+
+Use these exact values in tailwind.config.js under extend.colors:
+
+primary:
+  DEFAULT : #0A3D6B   (Deep Institutional Navy Blue)
+  light   : #1565A8   (hover/active)
+  dark    : #061E35   (sidebar, navbar)
+  pale    : #E8F0F9   (card fills, table headers)
+
+accent:
+  DEFAULT : #C8980A   (Polytechnic Gold — official feel)
+  light   : #FFF8E1   (gold badge backgrounds)
+  dark    : #8C6B00   (hover)
+
+neutral:
+  50  : #F7F9FC
+  100 : #EEF2F8
+  200 : #DDE4EE
+  300 : #C0CCD9
+  400 : #8EA3B8
+  500 : #5B7A92
+  600 : #3F5C6E
+  700 : #2B3F50
+  800 : #182532
+  900 : #0A1318
+
+status:
+  active    : #16A34A   (green)
+  suspended : #D97706   (amber)
+  expired   : #6B7280   (gray)
+  revoked   : #DC2626   (red)
+  pending   : #0891B2   (blue)
+  valid     : #16A34A
+  invalid   : #DC2626
+
+DESIGN RULES:
+  Navbar/Sidebar background   : primary.dark (#061E35)
+  Page background             : neutral.50 (#F7F9FC)
+  Cards                       : white, neutral.200 border, shadow-sm
+  Primary buttons             : primary.DEFAULT (#0A3D6B) white text
+  Secondary buttons           : white, primary.DEFAULT border + text
+  Danger buttons              : #DC2626
+  Table header rows           : primary.pale (#E8F0F9)
+  Active sidebar item         : primary.light white text
+  Digital ID card background  : gradient primary.dark → primary.DEFAULT
+  Gold accent strip on ID card: accent.DEFAULT (#C8980A)
+  VALID banner (scan result)  : status.valid green, full width
+  INVALID/REVOKED banner      : status.revoked red, full width
+  SUSPENDED banner            : status.suspended amber, full width
+  EXPIRED banner              : status.expired gray, full width
+
+================================================================
+FOLDER STRUCTURE
+================================================================
+
+digital-identity-system/
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── axiosInstance.js      # Axios + token refresh interceptor
+│   │   │   └── index.js              # All API call functions
+│   │   ├── assets/
+│   │   │   ├── logo.png              # DSPoly Library logo
+│   │   │   └── id-card-bg.png        # ID card background texture
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   │   ├── Button.jsx
+│   │   │   │   ├── Input.jsx
+│   │   │   │   ├── Modal.jsx
+│   │   │   │   ├── Badge.jsx
+│   │   │   │   ├── Spinner.jsx
+│   │   │   │   ├── Table.jsx
+│   │   │   │   ├── Pagination.jsx
+│   │   │   │   ├── ConfirmDialog.jsx
+│   │   │   │   └── SearchInput.jsx
+│   │   │   ├── layout/
+│   │   │   │   ├── Navbar.jsx
+│   │   │   │   ├── Sidebar.jsx
+│   │   │   │   ├── PageWrapper.jsx
+│   │   │   │   └── AuthLayout.jsx
+│   │   │   └── features/
+│   │   │       ├── DigitalIDCard.jsx  # Visual ID card component
+│   │   │       ├── QRScanner.jsx      # html5-qrcode scanner widget
+│   │   │       ├── VerifyResult.jsx   # VALID/INVALID result banner
+│   │   │       ├── OTPInput.jsx       # 6-digit OTP input boxes
+│   │   │       ├── TOTPSetup.jsx      # QR setup for authenticator app
+│   │   │       └── AccessLogRow.jsx
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx        # user, role, accessToken, refresh
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js
+│   │   │   ├── useFetch.js
+│   │   │   └── useSearch.js
+│   │   ├── pages/
+│   │   │   ├── auth/
+│   │   │   │   ├── Login.jsx
+│   │   │   │   ├── OTPVerify.jsx      # Step 2 of MFA login
+│   │   │   │   ├── ForgotPassword.jsx
+│   │   │   │   └── ResetPassword.jsx
+│   │   │   ├── admin/
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   ├── Identities.jsx     # All issued identities
+│   │   │   │   ├── IssueIdentity.jsx  # Issue new digital identity
+│   │   │   │   ├── IdentityDetail.jsx # Full identity profile + lifecycle
+│   │   │   │   ├── UserManagement.jsx
+│   │   │   │   ├── AccessLogs.jsx
+│   │   │   │   ├── Reports.jsx
+│   │   │   │   └── Settings.jsx
+│   │   │   ├── librarian/
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   ├── ScanVerify.jsx     # QR scanner + verification
+│   │   │   │   ├── Identities.jsx     # View all identities (read-only)
+│   │   │   │   └── AccessLogs.jsx     # View logs
+│   │   │   └── user/
+│   │   │       ├── Dashboard.jsx      # My identity card view
+│   │   │       ├── MyIDCard.jsx       # Download, view digital ID
+│   │   │       ├── MyAccessHistory.jsx
+│   │   │       ├── SecuritySettings.jsx # Change password, 2FA toggle
+│   │   │       └── Profile.jsx
+│   │   ├── routes/
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── RoleRoute.jsx
+│   │   │   └── AppRoutes.jsx
+│   │   ├── utils/
+│   │   │   ├── formatDate.js
+│   │   │   ├── identityStatus.js
+│   │   │   └── validators.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── tailwind.config.js
+│   └── vite.config.js
+│
+├── server/
+│   ├── config/
+│   │   ├── db.js
+│   │   └── email.js
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── identityController.js
+│   │   ├── verifyController.js
+│   │   ├── userController.js
+│   │   ├── accessLogController.js
+│   │   └── reportController.js
+│   ├── middleware/
+│   │   ├── authMiddleware.js       # Verify JWT access token
+│   │   ├── roleMiddleware.js
+│   │   ├── rateLimitMiddleware.js  # express-rate-limit on /login
+│   │   ├── errorMiddleware.js
+│   │   └── uploadMiddleware.js     # Multer for profile photos
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Identity.js
+│   │   ├── AccessLog.js
+│   │   ├── RefreshToken.js
+│   │   └── Settings.js
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── identityRoutes.js
+│   │   ├── verifyRoutes.js
+│   │   ├── userRoutes.js
+│   │   ├── accessLogRoutes.js
+│   │   └── reportRoutes.js
+│   ├── utils/
+│   │   ├── generateTokens.js       # Access + refresh JWT
+│   │   ├── generateDID.js          # DID-POLY-XXXXXX generator
+│   │   ├── generateVerifyToken.js  # HMAC-signed QR token
+│   │   ├── generateOTP.js          # 6-digit OTP + expiry
+│   │   ├── hashToken.js            # SHA-256 hash for token storage
+│   │   └── pdfGenerator.js         # ID card PDF builder
+│   ├── jobs/
+│   │   └── expiryScheduler.js      # node-cron: daily expiry checks
+│   ├── uploads/
+│   ├── seedData.js
+│   ├── .env
+│   └── server.js
+│
+├── .gitignore
+└── README.md
+
+================================================================
+DATABASE MODELS
+================================================================
+
+--- User.js ---
+fullName           : String, required
+email              : String, required, unique
+password           : String, required (bcrypt hashed)
+role               : enum ['admin','librarian','student','staff'],
+                     required
+matricNumber       : String (students only)
+staffID            : String (staff/librarian only)
+phone              : String
+department         : String
+profileImage       : String (file path)
+isMFAEnabled       : Boolean, default true
+totpSecret         : String (encrypted TOTP secret if app 2FA enabled)
+isTOTPEnabled      : Boolean, default false
+otpCode            : String (hashed current OTP)
+otpExpiry          : Date
+loginAttempts      : Number, default 0
+lockUntil          : Date
+isActive           : Boolean, default true
+emailVerifyToken   : String
+isEmailVerified    : Boolean, default false
+passwordResetToken : String
+passwordResetExpiry: Date
+createdBy          : ObjectId ref User
+timestamps         : true
+
+--- Identity.js ---
+digitalIDNumber    : String, unique (auto: DID-POLY-XXXXXX)
+user               : ObjectId ref User, required
+fullName           : String, required
+photo              : String (file path, required)
+role               : String (mirrors User.role)
+accessLevel        : Number, enum [1,2,3,4], required
+department         : String
+matricNumber       : String
+staffID            : String
+issueDate          : Date, default Date.now
+expiryDate         : Date, required (issueDate + defaultMonths)
+status             : enum ['Active','Suspended','Revoked','Expired',
+                     'Pending'], default 'Active'
+verifyToken        : String (HMAC-signed, hashed for storage)
+verifyTokenRaw     : String (raw token embedded in QR — NOT stored)
+qrCodeImage        : String (base64 QR code image)
+suspendedAt        : Date
+suspensionReason   : String
+revokedAt          : Date
+revocationReason   : String
+renewedAt          : Date
+renewedBy          : ObjectId ref User
+expiryWarningSent  : Boolean, default false
+finalWarningSent   : Boolean, default false
+issuedBy           : ObjectId ref User
+lifecycleHistory   : [{
+                       action: String,
+                       performedBy: ObjectId ref User,
+                       reason: String,
+                       timestamp: Date
+                     }]
+timestamps         : true
+
+--- AccessLog.js ---
+identity           : ObjectId ref Identity
+user               : ObjectId ref User
+action             : enum [
+                       'LOGIN_SUCCESS', 'LOGIN_FAILED',
+                       'OTP_SENT', 'OTP_VERIFIED', 'OTP_FAILED',
+                       'QR_SCAN_VALID', 'QR_SCAN_INVALID',
+                       'QR_SCAN_SUSPENDED', 'QR_SCAN_EXPIRED',
+                       'IDENTITY_ISSUED', 'IDENTITY_RENEWED',
+                       'IDENTITY_SUSPENDED', 'IDENTITY_REVOKED',
+                       'IDENTITY_ACTIVATED', 'PASSWORD_RESET',
+                       'ACCOUNT_LOCKED', '2FA_ENABLED', '2FA_DISABLED'
+                     ]
+outcome            : enum ['Success','Failed','Suspicious']
+ipAddress          : String
+userAgent          : String
+details            : String
+performedBy        : ObjectId ref User (admin actions)
+timestamp          : Date, default Date.now
+
+--- RefreshToken.js ---
+token              : String, required (hashed)
+user               : ObjectId ref User, required
+expiresAt          : Date, required
+isRevoked          : Boolean, default false
+createdAt          : Date, default Date.now
+
+--- Settings.js ---
+institutionName         : String
+institutionAddress      : String
+institutionPhone        : String
+defaultExpiryMonths     : Number, default 12
+expiryWarningDays       : Number, default 30
+finalWarningDays        : Number, default 7
+requireMFAForAll        : Boolean, default true
+allowTOTP               : Boolean, default true
+loginRateLimitMax       : Number, default 5
+accountLockoutMinutes   : Number, default 30
+accessLevelDescriptions : [{level: Number, description: String}]
+
+================================================================
+USER ROLES AND PERMISSIONS
+================================================================
+
+Feature                              | Admin | Librarian | Student | Staff
+-------------------------------------|-------|-----------|---------|------
+Login (with MFA)                     |  YES  |    YES    |   YES   |  YES
+Issue digital identity               |  YES  |     NO    |    NO   |   NO
+View all identities                  |  YES  |    YES    |    NO   |   NO
+View own identity card               |  YES  |    YES    |   YES   |  YES
+Download own ID card PDF             |  YES  |    YES    |   YES   |  YES
+Suspend identity                     |  YES  |     NO    |    NO   |   NO
+Revoke identity                      |  YES  |     NO    |    NO   |   NO
+Renew identity                       |  YES  |     NO    |    NO   |   NO
+Scan and verify QR code              |  YES  |    YES    |    NO   |   NO
+View full access logs                |  YES  |    YES    |    NO   |   NO
+View own scan/access history         |  YES  |    YES    |   YES   |  YES
+Manage system users                  |  YES  |     NO    |    NO   |   NO
+Generate reports                     |  YES  |     NO    |    NO   |   NO
+Configure system settings            |  YES  |     NO    |    NO   |   NO
+Enable/disable own 2FA (TOTP)        |  YES  |    YES    |   YES   |  YES
+Change own password                  |  YES  |    YES    |   YES   |  YES
+
+================================================================
+BACKEND API ROUTES
+================================================================
+
+AUTH — /api/auth
+  POST  /login                  Step 1: email + password → send OTP
+  POST  /verify-otp             Step 2: submit OTP → return tokens
+  POST  /verify-totp            Step 2 alt: submit TOTP code → tokens
+  POST  /refresh                Use refresh token → new access token
+  POST  /logout                 Revoke refresh token
+  POST  /forgot-password        Send reset email
+  POST  /reset-password/:token  Reset password
+  GET   /me                     Get current user (from access token)
+
+IDENTITY — /api/identity
+  POST  /                       Issue new identity (Admin only)
+  GET   /                       All identities paginated (Admin, Librarian)
+  GET   /my                     Current user's own identity
+  GET   /:id                    Single identity full details
+  PUT   /:id                    Update identity details (Admin)
+  POST  /:id/suspend            Suspend with reason (Admin)
+  POST  /:id/activate           Re-activate suspended identity (Admin)
+  POST  /:id/revoke             Revoke permanently (Admin)
+  POST  /:id/renew              Renew + regenerate QR token (Admin)
+  GET   /:id/download           Download PDF ID card
+  POST  /:id/photo              Upload/update profile photo (Multer)
+
+VERIFY — /api/verify
+  GET   /:token                 Verify QR token (public — no auth needed)
+                                Returns identity status + display info
+                                Logs every scan to AccessLog
+
+USERS — /api/users (Admin only)
+  POST  /                       Create new user account
+  GET   /                       All users paginated
+  GET   /:id                    Single user
+  PUT   /:id                    Update user
+  POST  /:id/unlock             Unlock locked account
+  DELETE /:id                   Deactivate user
+
+TOTP — /api/totp (authenticated users)
+  GET   /setup                  Generate TOTP secret + QR for setup
+  POST  /enable                 Confirm TOTP code to enable app 2FA
+  POST  /disable                Disable TOTP (requires password confirm)
+
+ACCESS LOGS — /api/logs
+  GET   /                       All logs — Admin + Librarian (paginated)
+  GET   /my                     Current user's own logs
+  GET   /export                 Export logs as PDF (Admin only)
+
+REPORTS — /api/reports (Admin only)
+  GET   /summary                Total identities by status
+  GET   /monthly-issuance       Monthly identity issuance trend
+  GET   /access-summary         Login/scan activity last 30 days
+  GET   /role-breakdown         Identity count by role
+  GET   /export/identities      Export identity register PDF
+  GET   /export/access-logs     Export access log report PDF
+
+SETTINGS — /api/settings
+  GET   /                       Get settings (all authenticated)
+  PUT   /                       Update settings (Admin only)
+
+================================================================
+FRONTEND PAGES AND FEATURES
+================================================================
+
+--- AUTH PAGES ---
+
+1. LOGIN PAGE (/login)  — Step 1 of MFA
+   AuthLayout: dark gradient bg (primary.dark → primary.DEFAULT)
+   Institution logo + "Secure Identity System" title
+   Email + Password fields (react-hook-form)
+   Show/hide password toggle
+   "Forgot Password?" link
+   Login button with loading state
+   On success: navigate to /verify-otp (pass email via state)
+   On 5 failed attempts: show "Account temporarily locked" message
+   Rate limit error: show "Too many attempts. Try again in X minutes"
+
+2. OTP VERIFY PAGE (/verify-otp) — Step 2 of MFA
+   6 individual digit input boxes (OTPInput component)
+   Auto-focus next box on digit entry
+   Paste support (paste 6 digits fills all boxes)
+   Timer countdown: "OTP expires in X:XX"
+   Resend OTP button (enabled after 60 seconds)
+   "Use Authenticator App instead" link (if TOTP enabled for user)
+   On success: store tokens, navigate to role dashboard
+   On failure: show error, highlight input boxes red
+   On expiry: show "OTP expired — please resend"
+
+3. TOTP VERIFY PAGE (/verify-totp) — Alt Step 2
+   Single 6-digit input (TOTP from Google Authenticator)
+   "Use email OTP instead" link
+   Verify button
+
+4. FORGOT PASSWORD / RESET PASSWORD
+   Standard email → reset link → new password form
+
+--- ADMIN PAGES ---
+
+5. ADMIN DASHBOARD (/admin/dashboard)
+   Header: "Delta State Polytechnic Library — Identity Management"
+   Metric cards (6):
+     Total Identities | Active | Suspended | Expired | Revoked |
+     Today's QR Scans
+   Alert banners:
+     Amber: "X identities expiring within 30 days — View"
+     Red: "X identities expired today — Renew Now"
+   Charts (Recharts):
+     Donut chart: Identity status breakdown
+       (Active/Suspended/Expired/Revoked/Pending)
+     Bar chart: Identities issued per month (last 12 months)
+     Bar chart: Daily QR scan activity (last 14 days)
+     Pie chart: Identities by role (Student/Staff/Librarian)
+   Recent Access Log table (last 10 entries)
+   Quick actions: Issue Identity, View Identities, View Logs
+
+6. IDENTITY REGISTER (/admin/identities)
+   Searchable, filterable table of all issued identities:
+     Photo thumbnail (40×40 circle), Digital ID Number, Full Name,
+     Role badge, Department, Access Level badge, Issue Date,
+     Expiry Date (red if expired/within 7 days, amber within 30),
+     Status badge, Actions
+   Filter: Status, Role, Access Level, Department, Expiry range
+   Search: name, DID number, matric number, staff ID
+   Actions: View, Suspend, Revoke, Renew, Download ID Card
+   Export Identity Register PDF button
+   Pagination (15 per page)
+
+7. ISSUE IDENTITY (/admin/identities/new)
+   Two-column form:
+   Left — User Details:
+     Select Existing User OR Create New User toggle
+     If existing: searchable user dropdown (name, email, role)
+     If new: Full Name*, Email*, Role*, Department*,
+       Matric/Staff ID (conditional), Phone, Password (auto-generate)
+   Right — Identity Details:
+     Access Level* (1-4 dropdown with descriptions)
+     Profile Photo* (upload — required for ID card)
+     Photo preview (circular crop preview)
+     Issue Date: today (read-only)
+     Expiry Date: auto-calculated (today + defaultExpiryMonths)
+       (editable date picker)
+   Preview Panel (updates live):
+     Mini digital ID card preview as user fills form
+     Shows: photo, name, DID (preview), role, access level,
+       issue/expiry dates, QR placeholder
+   Issue Identity button
+   On success: show full digital ID card with Download PDF + Done
+
+8. IDENTITY DETAIL (/admin/identities/:id)
+   Full-page identity profile:
+
+   Top section — Digital ID Card display (DigitalIDCard component):
+     Full rendered card: photo, DID number, name, role, access level,
+     department, issue/expiry dates, QR code, institution branding
+     Download PDF button | Print button
+
+   Middle section — Identity Info:
+     User account link, contact details, matric/staff ID
+     Status badge (large), expiry countdown
+     "Days until expiry: X" or "Expired X days ago"
+
+   Action buttons (Admin only, shown conditionally by status):
+     Active   → [Suspend] [Revoke] [Renew]
+     Suspended → [Activate] [Revoke]
+     Expired  → [Renew]
+     Revoked  → (no actions available)
+   Each action opens a ConfirmDialog with reason textarea
+
+   Bottom section — Lifecycle History table:
+     Action, Performed By, Reason, Timestamp
+     (from Identity.lifecycleHistory array)
+
+   Access Log tab:
+     All scan/access events for this identity
+
+9. USER MANAGEMENT (/admin/users)
+   Table: Photo, Name, Role badge, Email, Department, Matric/Staff ID,
+   MFA Status badge, Account Status badge, Created Date, Actions
+   Actions: View, Edit, Unlock (if locked), Deactivate
+   Add New User button → modal form
+   Filter: Role, Status, MFA enabled
+
+10. ACCESS LOGS (/admin/logs)
+    Table: Timestamp, User/Identity, Action type badge,
+    Outcome badge (Success/Failed/Suspicious), IP Address,
+    Device/Browser, Details
+    Filter: Action type, Outcome, User, Date range
+    Search: user name, IP address
+    Export Access Logs PDF button
+    Pagination (20 per page)
+    Suspicious activity highlighted in amber row
+
+11. REPORTS (/admin/reports)
+    Summary metric cards
+    All 4 charts in full view
+    Date range filter
+    Export: Identity Register PDF, Access Log Report PDF,
+    Monthly Summary PDF
+
+12. SETTINGS (/admin/settings)
+    Institution Name, Address, Phone
+    Default Identity Expiry (months)
+    Expiry Warning Days (first warning)
+    Final Warning Days (last warning before expiry)
+    Require MFA For All Users (toggle — cannot disable for Admin/Librarian)
+    Allow TOTP (authenticator app) toggle
+    Login Rate Limit Max Attempts
+    Account Lockout Duration (minutes)
+    Access Level Descriptions (editable text per level 1-4)
+    Save Settings button
+
+--- LIBRARIAN PAGES ---
+
+13. LIBRARIAN DASHBOARD (/librarian/dashboard)
+    Metric cards (4):
+      Today's QR Scans | Valid Scans | Invalid/Suspicious | Active Identities
+    Recent scan log (last 10)
+    Quick action: Scan & Verify
+
+14. SCAN & VERIFY (/librarian/verify)
+    This is the core librarian workflow page.
+
+    Full-width QR Scanner panel (QRScanner component using html5-qrcode):
+      Camera feed with scan frame overlay
+      "Point camera at the QR code on the member's digital ID"
+      Toggle between camera scan and manual code entry (text input)
+
+    On successful decode → hit GET /api/verify/:token
+    Show VerifyResult component (full-screen overlay):
+
+    IF VALID (status: Active, not expired, token match):
+      Large GREEN banner: ✓ IDENTITY VERIFIED
+      Identity card details:
+        Photo (large circular), Full Name (large text),
+        Digital ID Number, Role badge, Access Level badge,
+        Department, Expiry Date
+      "Access Granted" subtext
+      Scan Another button (resets scanner)
+
+    IF EXPIRED:
+      Large GRAY banner: ✗ IDENTITY EXPIRED
+      Same details shown
+      "Expired on: [date]" message
+      "Please request identity renewal from Admin"
+
+    IF SUSPENDED:
+      Large AMBER banner: ⚠ IDENTITY SUSPENDED
+      "Reason: [suspensionReason]"
+      "Please contact the Library Administration"
+
+    IF REVOKED:
+      Large RED banner: ✗ IDENTITY REVOKED
+      "This identity has been permanently revoked"
+      "Do not grant access"
+
+    IF INVALID (token not found or tampered):
+      Large RED banner: ✗ INVALID IDENTITY
+      "This QR code could not be verified"
+      "Please report to Administration"
+
+    All scan results auto-logged to AccessLog
+
+15. LIBRARIAN — VIEW IDENTITIES (/librarian/identities)
+    Same table as admin but read-only — no action buttons
+    Can search and filter, download individual ID cards
+
+16. LIBRARIAN — ACCESS LOGS (/librarian/logs)
+    Same log view as admin — read-only filter/search
+
+--- USER (STUDENT/STAFF) PAGES ---
+
+17. USER DASHBOARD (/user/dashboard)
+    Welcome: "Welcome, [Name]"
+    Identity status card (large):
+      If Active: green card, DID number, expiry date
+      If Expired: red card with "Your identity has expired" + contact admin
+      If Suspended: amber card with reason
+    "View My ID Card" button
+    "Download ID Card PDF" button
+    Recent activity (last 5 scan/login events)
+
+18. MY ID CARD (/user/my-id)
+    Full rendered DigitalIDCard component:
+      Styled like a physical ID card:
+        Top strip: institution logo + name (primary.dark bg, gold strip)
+        Photo (large, circular)
+        Full Name (large)
+        Digital ID Number (monospace)
+        Role | Access Level
+        Department | Matric/Staff ID
+        Issue Date | Expiry Date
+        QR Code (right side)
+        Footer: institution address
+    Download PDF button
+    Print button
+    Status banner below card (Active/Expired/Suspended)
+
+19. MY ACCESS HISTORY (/user/access-history)
+    Table of own events:
+      Timestamp, Action (Login, QR Scan etc.), Outcome, IP, Device
+    Filter by Action, Date range
+    Pagination
+
+20. SECURITY SETTINGS (/user/security)
+    Change Password section:
+      Current password, New password, Confirm new password
+      Password strength indicator
+      Submit button
+
+    Two-Factor Authentication section:
+      Current status badge: "Email OTP (Active)"
+        or "Authenticator App (Active)"
+      Enable Authenticator App (TOTP) button:
+        → GET /api/totp/setup → returns QR code image
+        → TOTPSetup component displays:
+             QR code for Google Authenticator scan
+             Manual code (for if QR doesn't scan)
+             "Enter the 6-digit code from your app" input
+             Verify & Enable button → POST /api/totp/enable
+      If TOTP already enabled:
+        Disable TOTP button → requires password confirm
+        → POST /api/totp/disable
+
+21. PROFILE (/user/profile)
+    View own account details
+    Update name, phone, department
+    Upload profile photo (updates User record + Identity photo)
+
+================================================================
+DIGITAL ID CARD DESIGN (DigitalIDCard component)
+================================================================
+
+The DigitalIDCard React component renders a styled card that
+matches a professional institutional ID:
+
+Dimensions: 85.6mm × 54mm (standard ID card ratio) in the browser
+  Use aspect-ratio CSS to maintain proportions
+
+Card structure (front):
+  ┌──────────────────────────────────────┐
+  │ [INSTITUTION LOGO]  DELTA STATE      │  ← primary.dark bg
+  │                     POLYTECHNIC      │     gold bottom border strip
+  │                     LIBRARY          │
+  ├──────┬───────────────────────────────┤
+  │      │  DIGITAL IDENTITY CARD        │
+  │ [    │  ─────────────────────────    │
+  │ PHOTO│  FULL NAME (large bold)       │
+  │  ]   │  DID-POLY-XXXXXX             │
+  │      │  ROLE   ACCESS LEVEL: X       │
+  │      │  DEPT: [department]           │
+  │      │  MATRIC/STAFF: XXXXXXX        │
+  ├──────┴──────────────┬────────────────┤
+  │ ISSUED: DD/MM/YYYY  │  [QR CODE]     │
+  │ EXPIRY: DD/MM/YYYY  │                │
+  │ STATUS: ●ACTIVE     │                │
+  └─────────────────────┴────────────────┘
+
+Colors:
+  Header bg  : primary.dark
+  Header text: white + accent.DEFAULT (gold) for institution name
+  Body bg    : white
+  QR section : neutral.100 bg
+  Footer strip: accent.DEFAULT (gold bar at very bottom)
+
+The QR code is the base64 image from Identity.qrCodeImage
+The status dot is colored by status (green/amber/red/gray)
+
+PDF version mirrors this layout using pdfkit drawing commands
+
+================================================================
+MFA AUTHENTICATION FLOW (detailed)
+================================================================
+
+STEP 1 — /api/auth/login:
+  1. Find user by email
+  2. Check account lock (lockUntil > now → return 423 with unlock time)
+  3. Compare bcrypt password
+  4. If wrong: increment loginAttempts, if >= 5 → set lockUntil,
+     log ACCOUNT_LOCKED to AccessLog, return 401
+  5. If correct: reset loginAttempts to 0
+  6. If isTOTPEnabled: return { mfaRequired: true, method: 'totp', email }
+  7. If isMFAEnabled (email OTP):
+     a. Generate 6-digit OTP using generateOTP.js
+     b. Hash OTP and store on user (otpCode, otpExpiry = now + 10min)
+     c. Send OTP email
+     d. Log OTP_SENT to AccessLog
+     e. Return { mfaRequired: true, method: 'email', email }
+  8. Log LOGIN_SUCCESS (rare — only if admin disabled MFA entirely)
+
+STEP 2a — /api/auth/verify-otp:
+  1. Find user by email
+  2. Check otpExpiry not passed → 400 "OTP expired"
+  3. Compare submitted OTP hash to stored hash
+  4. If wrong: log OTP_FAILED, return 401 "Invalid OTP"
+  5. If correct: clear otpCode/otpExpiry, log OTP_VERIFIED
+  6. Generate access token (15min) + refresh token (7days)
+  7. Store hashed refresh token in RefreshToken collection
+  8. Set refresh token as httpOnly cookie
+  9. Return access token in response body
+
+STEP 2b — /api/auth/verify-totp:
+  1. Find user by email, get totpSecret (decrypt if encrypted)
+  2. Use speakeasy.totp.verify(secret, token, window: 1)
+  3. If invalid: return 401
+  4. If valid: same token generation flow as STEP 2a
+
+TOKEN REFRESH — /api/auth/refresh:
+  1. Read refresh token from httpOnly cookie
+  2. Hash it, find in RefreshToken collection
+  3. Validate not revoked, not expired
+  4. Generate new access token
+  5. Rotate refresh token (delete old, create new)
+  6. Return new access token
+
+Axios interceptor on client:
+  On 401 response: call /api/auth/refresh silently
+  If refresh succeeds: retry original request with new token
+  If refresh fails: clear auth state, redirect to /login
+
+================================================================
+QR VERIFICATION TOKEN SYSTEM
+================================================================
+
+When identity is issued or renewed:
+  1. Generate raw verify token: 32 random bytes → hex string
+  2. Create HMAC signature: crypto.createHmac('sha256', IDENTITY_VERIFY_SECRET)
+     .update(rawToken + identity._id).digest('hex')
+  3. verifyTokenRaw = rawToken (embedded in QR URL — never stored in DB)
+  4. Store verifyToken = SHA-256 hash of (rawToken + HMAC) in Identity document
+  5. QR code URL format:
+     CLIENT_URL/verify/[rawToken].[hmacSignature]
+  6. Generate QR code image from URL using qrcode npm package
+  7. Store base64 QR image in Identity.qrCodeImage
+
+When QR is scanned:
+  GET /api/verify/:token
+  where :token = [rawToken].[hmacSignature]
+  1. Split token on '.'
+  2. Recompute HMAC from rawToken
+  3. Compare to submitted hmacSignature (constant-time compare)
+  4. If mismatch: log QR_SCAN_INVALID, return INVALID
+  5. Recompute stored hash, find Identity where verifyToken matches
+  6. If not found: log QR_SCAN_INVALID, return INVALID
+  7. Check Identity.status:
+     Active + not expired → log QR_SCAN_VALID → return VALID + details
+     Expired             → log QR_SCAN_EXPIRED → return EXPIRED + details
+     Suspended           → log QR_SCAN_SUSPENDED → return SUSPENDED + details
+     Revoked             → log QR_SCAN_INVALID → return REVOKED
+  8. Return: { status, identity: { photo, fullName, digitalIDNumber,
+     role, accessLevel, department, issueDate, expiryDate } }
+
+NOTE: The verification endpoint is PUBLIC (no auth required) so that
+a QR scanner device or even a phone browser can verify without login.
+
+================================================================
+AUTOMATED JOBS (node-cron)
+================================================================
+
+1. DAILY EXPIRY CHECK — '0 7 * * *' (every day at 7AM)
+   For each Active identity:
+     a. If expiryDate <= today:
+        Set status = 'Expired'
+        Log IDENTITY_EXPIRED to AccessLog
+        Send expiry notice email to user
+     b. Else if expiryDate <= today + warningDays AND !expiryWarningSent:
+        Send expiry warning email
+        Set expiryWarningSent = true
+     c. Else if expiryDate <= today + finalWarningDays AND !finalWarningSent:
+        Send final warning email
+        Set finalWarningSent = true
+
+================================================================
+BUSINESS RULES
+================================================================
+
+1.  Admin and Librarian roles always require MFA — cannot disable
+2.  Each user can have only ONE active identity at a time
+3.  Revoking is permanent — no re-activation after revocation
+4.  Renewing creates a new verifyToken + QR code + resets expiry
+5.  Suspended identities block QR verification but user can still login
+6.  Expired identities: user can login but QR verification fails
+7.  Profile photo is REQUIRED before identity can be issued
+8.  Identity photo change requires admin action (PUT /api/identity/:id)
+9.  Soft-delete users only — deactivated users cannot login
+10. If user is deactivated, their identity auto-suspends
+11. All OTPs expire in 10 minutes, max 3 resend requests per hour
+12. Access tokens expire in 15 minutes (security standard)
+13. Refresh tokens rotate on every use (prevents token theft)
+14. Failed login attempts and lockouts are always logged
+15. QR verification logs every scan regardless of outcome
+16. Export of access logs requires Admin role
+
+================================================================
+EMAIL TEMPLATES
+================================================================
+
+1. OTP EMAIL
+   Subject: "Your Login OTP — Delta State Polytechnic Library"
+   Body: name, 6-digit OTP (large styled), "Expires in 10 minutes",
+   "Do not share this code with anyone"
+
+2. IDENTITY ISSUED
+   Subject: "Your Digital Identity Card Has Been Issued"
+   Body: name, DID number, issue date, expiry date,
+   "Login to download your digital ID card", portal link
+
+3. EXPIRY WARNING (30 days)
+   Subject: "Your Library Digital Identity Expires in 30 Days"
+   Body: name, DID number, expiry date, "Please contact admin to renew"
+
+4. FINAL WARNING (7 days)
+   Subject: "URGENT: Your Library Digital Identity Expires in 7 Days"
+   Body: same + urgency language
+
+5. IDENTITY EXPIRED
+   Subject: "Your Library Digital Identity Has Expired"
+   Body: expiry date, "You cannot access the library until renewed",
+   contact details
+
+6. IDENTITY SUSPENDED
+   Subject: "Your Library Digital Identity Has Been Suspended"
+   Body: suspension reason, who to contact
+
+7. IDENTITY RENEWED
+   Subject: "Your Library Digital Identity Has Been Renewed"
+   Body: new expiry date, "Download updated ID card from portal"
+
+8. PASSWORD RESET
+   Subject: "Reset Your Library Identity System Password"
+   Body: reset link (1 hour expiry)
+
+9. ACCOUNT LOCKED
+   Subject: "Your Account Has Been Temporarily Locked"
+   Body: reason (too many failed attempts), unlock time,
+   "Contact admin if this was not you"
+
+================================================================
+SEED DATA
+================================================================
+
+Users (5):
+  admin@dspoly.edu.ng      / Admin@1234    (Admin)
+  librarian@dspoly.edu.ng  / Lib@1234      (Librarian)
+  student@dspoly.edu.ng    / Student@1234  (Student — Matric: DSP/CS/2022/001)
+  staff@dspoly.edu.ng      / Staff@1234    (Staff — Staff ID: STAFF-0042)
+  student2@dspoly.edu.ng   / Student2@1234 (Student — Matric: DSP/CS/2022/002)
+
+Identities (5 — one per user):
+  Admin identity: Active
+  Librarian identity: Active
+  Student 1: Active (expires in 60 days)
+  Staff: Active (expires in 15 days — triggers warning email test)
+  Student 2: Suspended (with reason: "Pending document verification")
+
+AccessLog entries (10 sample entries):
+  Mix of LOGIN_SUCCESS, QR_SCAN_VALID, QR_SCAN_EXPIRED, IDENTITY_ISSUED
+
+Settings: 1 document with Delta State Polytechnic Library defaults
+
+================================================================
+PACKAGE DEPENDENCIES
+================================================================
+
+CLIENT (client/package.json):
+  react, react-dom, react-router-dom, axios,
+  react-hot-toast, react-hook-form, recharts,
+  react-datepicker, @heroicons/react,
+  html5-qrcode, qrcode.react
+
+  devDependencies:
+  vite, @vitejs/plugin-react, tailwindcss, postcss, autoprefixer
+
+SERVER (server/package.json):
+  express, mongoose, bcryptjs, jsonwebtoken,
+  multer, nodemailer, dotenv, cors, pdfkit,
+  node-cron, express-async-handler, morgan,
+  otplib, speakeasy, qrcode, express-rate-limit,
+  cookie-parser
+
+  devDependencies:
+  nodemon
+
+================================================================
+DEFENSE NOTES
+================================================================
+
+Q: What is a digital identity system and why is it needed for a library?
+A: A digital identity system provides each user with a unique, verifiable
+electronic credential that proves who they are. In a library setting,
+it replaces physical ID cards which can be forged, lost, or borrowed by
+others. The digital system ties identity to a cryptographically signed
+QR code that can only be validated against the live database, making
+impersonation virtually impossible.
+
+Q: How does multi-factor authentication work in your system?
+A: MFA requires two independent proofs of identity. Factor one is the
+password, which proves knowledge. Factor two is either a time-limited
+OTP sent to the user's registered email, or a TOTP from an authenticator
+app, which proves possession of the registered device. Even if a password
+is stolen, an attacker cannot login without also controlling the user's
+email or phone.
+
+Q: How does the QR code verification work — how do you know it hasn't been forged?
+A: The QR code encodes a URL containing two parts: a random token and an
+HMAC signature generated using a secret key stored only on the server.
+When the QR is scanned, the server recomputes the HMAC from the submitted
+token and compares it to the submitted signature using constant-time
+comparison to prevent timing attacks. If they don't match, the QR is
+flagged as tampered. If they match, the system looks up the identity by
+a stored hash of the token combination. This means the QR cannot be
+fabricated without knowing the server's secret key.
+
+Q: Why do you use short-lived access tokens (15 minutes)?
+A: In identity systems, shorter token lifetimes minimize the window of
+exposure if a token is intercepted. A stolen access token becomes useless
+after 15 minutes. Refresh tokens, which last 7 days but are stored in
+httpOnly cookies and rotated on every use, handle seamless session renewal
+without requiring re-login.
+
+Q: What is refresh token rotation and why is it important?
+A: Every time a refresh token is used to get a new access token, the old
+refresh token is deleted and a new one is issued. This means a stolen
+refresh token becomes invalid after the legitimate user makes any request.
+It provides forward secrecy — past tokens cannot be reused even if
+intercepted — which is a critical security property for an identity system.
+
+Q: How do you prevent brute-force attacks on the login page?
+A: Two mechanisms work together. First, express-rate-limit restricts the
+/login endpoint to a configurable maximum of attempts (default 5) per IP
+address within a 15-minute window, returning 429 Too Many Requests after
+the limit is reached. Second, at the user level, after 5 consecutive failed
+login attempts, the account is locked for 30 minutes (configurable in
+Settings). Both events are logged in the AccessLog for admin review.
+
+Q: What is the identity lifecycle and why does it matter?
+A: An identity lifecycle tracks every state change a digital identity goes
+through: Issued → Active → Suspended/Revoked/Expired → Renewed. Each
+transition is logged with who performed it, why, and when — stored in the
+identity's lifecycleHistory array. This is essential for accountability
+in an institutional setting, allowing administrators to audit why an
+identity was suspended and by whom, which reflects real-world identity
+governance practices.
+
+Q: Why is there a distinction between Suspended and Revoked?
+A: Suspension is temporary — it blocks QR verification and library access
+but can be reversed by an admin once the issue is resolved (e.g. after a
+student clears outstanding dues). Revocation is permanent and irreversible
+— used for serious violations or when a user permanently leaves the
+institution. This distinction prevents accidental permanent cancellation
+of identities that only need temporary restriction.
+
+Q: What is TOTP and how did you implement it?
+A: TOTP stands for Time-based One-Time Password. It uses a shared secret
+between the server and an authenticator app (like Google Authenticator)
+to generate a synchronized 6-digit code that changes every 30 seconds.
+I implemented it using the speakeasy library. During setup, a secret is
+generated, converted to a QR code for the user to scan into their app,
+then a test code is verified before the secret is stored. On each login,
+the submitted code is verified against the current and adjacent time
+windows to account for clock drift.
+
+Q: How does the audit trail support security in this system?
+A: Every significant event — successful logins, failed attempts, OTP
+activity, QR scan outcomes, identity lifecycle changes, admin actions —
+is written to the AccessLog collection with the actor's ID, IP address,
+browser information, and timestamp. This creates an immutable record
+that allows administrators to investigate suspicious activity (e.g.
+multiple failed scans of the same identity from different IPs) and
+demonstrate accountability to institutional auditors.
+
+================================================================
+END OF MASTER PROMPT + DOCUMENTATION
+Design and Implementation of a Secure Digital Identity System
+(A Case Study of Delta State Polytechnic Library)
+Academic Final Year Project — Delta State Polytechnic, Otefe-Oghara
+================================================================
