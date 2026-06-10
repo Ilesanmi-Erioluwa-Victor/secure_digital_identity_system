@@ -15,39 +15,44 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
-const adminLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-  { to: '/identities', label: 'Identities', icon: IdentificationIcon },
-  { to: '/issue-identity', label: 'Issue Identity', icon: UserPlusIcon },
-  { to: '/users', label: 'Users', icon: UsersIcon },
-  { to: '/access-logs', label: 'Access Logs', icon: ClipboardDocumentListIcon },
-  { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
-  { to: '/settings', label: 'Settings', icon: Cog6ToothIcon },
-];
+const rolePrefix = {
+  admin: '/admin',
+  librarian: '/librarian',
+  student: '/user',
+  staff: '/user',
+};
 
-const librarianLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-  { to: '/scan-verify', label: 'Scan & Verify', icon: QrCodeIcon },
-  { to: '/identities', label: 'Identities', icon: IdentificationIcon },
-  { to: '/access-logs', label: 'Access Logs', icon: ClipboardDocumentListIcon },
-];
-
-const userLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-  { to: '/my-id-card', label: 'My ID Card', icon: IdentificationIcon },
-  { to: '/access-history', label: 'Access History', icon: ClockIcon },
-  { to: '/security', label: 'Security', icon: ShieldCheckIcon },
-  { to: '/profile', label: 'Profile', icon: UserCircleIcon },
-];
-
-const roleLinks = {
-  admin: adminLinks,
-  librarian: librarianLinks,
-  user: userLinks,
+const linkDefs = {
+  admin: [
+    { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
+    { to: '/identities', label: 'Identities', icon: IdentificationIcon },
+    { to: '/identities/new', label: 'Issue Identity', icon: UserPlusIcon },
+    { to: '/users', label: 'Users', icon: UsersIcon },
+    { to: '/logs', label: 'Access Logs', icon: ClipboardDocumentListIcon },
+    { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
+    { to: '/settings', label: 'Settings', icon: Cog6ToothIcon },
+  ],
+  librarian: [
+    { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
+    { to: '/verify', label: 'Scan & Verify', icon: QrCodeIcon },
+    { to: '/identities', label: 'Identities', icon: IdentificationIcon },
+    { to: '/logs', label: 'Access Logs', icon: ClipboardDocumentListIcon },
+  ],
+  user: [
+    { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
+    { to: '/my-id', label: 'My ID Card', icon: IdentificationIcon },
+    { to: '/access-history', label: 'Access History', icon: ClockIcon },
+    { to: '/security', label: 'Security', icon: ShieldCheckIcon },
+    { to: '/profile', label: 'Profile', icon: UserCircleIcon },
+  ],
 };
 
 export default function Sidebar({ role = 'admin', isOpen, onClose }) {
-  const links = roleLinks[role] || userLinks;
+  const prefix = rolePrefix[role] || '/user';
+  const links = (linkDefs[role] || linkDefs.user).map((link) => ({
+    ...link,
+    to: prefix + link.to,
+  }));
 
   return (
     <>

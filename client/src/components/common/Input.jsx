@@ -10,6 +10,7 @@ const Input = forwardRef(function Input({
   required = false,
   className = '',
   icon: Icon,
+  value,
   ...rest
 }, ref) {
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +39,7 @@ const Input = forwardRef(function Input({
           name={name}
           type={inputType}
           ref={ref}
+          value={value ?? ''}
           placeholder={placeholder}
           required={required}
           className={`block w-full rounded-lg border bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 transition-colors focus:outline-none focus:ring-2 ${
