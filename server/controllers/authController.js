@@ -303,7 +303,8 @@ const verifyOtp = asyncHandler(async (req, res) => {
 });
 
 const verifyTotp = asyncHandler(async (req, res) => {
-  const { email, token } = req.body;
+  const { email, token: bodyToken, totp } = req.body;
+  const token = bodyToken || totp;
   const ipAddress = req.ip || req.connection.remoteAddress;
   const userAgent = req.headers['user-agent'] || '';
 
