@@ -134,12 +134,11 @@ const login = asyncHandler(async (req, res) => {
       });
     } catch (emailErr) {
       console.error('OTP email failed:', emailErr.message);
-      console.log(`\n========== DEV OTP ==========`);
-      console.log(`  Email: ${user.email}`);
-      console.log(`  OTP:   ${otp}`);
-      console.log(`  Expires in 5 minutes`);
-      console.log(`=============================\n`);
     }
+    console.log(`\n========== OTP for ${user.email} ==========`);
+    console.log(`  OTP: ${otp}`);
+    console.log(`  Expires in 5 minutes`);
+    console.log(`===========================================\n`);
 
     await logAccess({
       user: user._id,
