@@ -6,7 +6,14 @@ const getSettings = asyncHandler(async (req, res) => {
   if (!settings) {
     settings = await Settings.create({});
   }
-  res.json({ settings });
+  const doc = settings.toObject();
+  if (Array.isArray(doc.accessLevelDescriptions)) {
+    doc.accessLevelDescriptions = doc.accessLevelDescriptions.reduce((acc, { level, description }) => {
+      if (level) acc[String(level)] = description || '';
+      return acc;
+    }, {});
+  }
+  res.json({ settings: doc });
 });
 
 const updateSettings = asyncHandler(async (req, res) => {
@@ -31,6 +38,16 @@ const updateSettings = asyncHandler(async (req, res) => {
 
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
+      if (field === 'accessLevelDescriptions') {
+        const obj = req.body[field];
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          settings[field] = Object.entries(obj).map(([level, description]) => ({
+            level: Number(level),
+            description: String(description),
+          }));
+          return;
+        }
+      }
       settings[field] = req.body[field];
     }
   });
