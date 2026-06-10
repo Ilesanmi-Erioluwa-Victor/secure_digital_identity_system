@@ -138,7 +138,7 @@ export default function Identities() {
         </div>
       ),
     },
-    { key: 'digitalId', label: 'Digital ID Number', render: (v) => <span className="font-mono text-xs">{v || 'N/A'}</span> },
+    { key: 'digitalIDNumber', label: 'Digital ID Number', render: (v) => <span className="font-mono text-xs">{v || 'N/A'}</span> },
     { key: 'fullName', label: 'Full Name' },
     {
       key: 'role',
@@ -200,7 +200,7 @@ export default function Identities() {
                 {row.status !== 'active' && row.status !== 'Active' && row.status !== 'revoked' && row.status !== 'Revoked' && (
                   <button onClick={() => { setOpenMenu(null); setConfirmAction({ id: row._id || row.id, action: 'renew', name: row.fullName }); }} className="w-full px-4 py-2 text-left text-sm text-primary hover:bg-neutral-50">Renew</button>
                 )}
-                <button onClick={() => { setOpenMenu(null); handleDownload(row._id || row.id, row.digitalId); }} className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50">Download ID Card</button>
+                <button onClick={() => { setOpenMenu(null); handleDownload(row._id || row.id, row.digitalIDNumber); }} className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50">Download ID Card</button>
               </div>
             </>
           )}
