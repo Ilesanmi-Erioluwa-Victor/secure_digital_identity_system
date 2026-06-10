@@ -25,6 +25,7 @@ export default function IssueIdentity() {
   const [photoPreview, setPhotoPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [departments, setDepartments] = useState([]);
   const [result, setResult] = useState(null);
   const [autoPassword, setAutoPassword] = useState('');
   const fileInputRef = useRef(null);
@@ -58,6 +59,12 @@ export default function IssueIdentity() {
       setValue('expiryDate', d.toISOString().split('T')[0]);
     }
   }, [watchIssueDate, setValue]);
+
+  useEffect(() => {
+    api.getDepartments()
+      .then((res) => setDepartments(res.departments || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (mode === 'existing') {
@@ -230,7 +237,12 @@ export default function IssueIdentity() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-neutral-700 mb-1">Department <span className="text-status-revoked">*</span></label>
-                      <input {...register('department', { required: 'Department is required' })} className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                      <select {...register('department', { required: 'Department is required' })} className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                        <option value="">Select department</option>
+                        {departments.map((d) => (
+                          <option key={d._id} value={d.name}>{d.name}</option>
+                        ))}
+                      </select>
                       {errors.department && <p className="mt-1 text-xs text-status-revoked">{errors.department.message}</p>}
                     </div>
                     {watchRole === 'student' && (

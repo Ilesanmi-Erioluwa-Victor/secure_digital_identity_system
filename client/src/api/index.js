@@ -132,6 +132,19 @@ const api = {
   exportAccessLogsReport: () =>
     axiosInstance.get('/reports/access-logs/export', { responseType: 'blob' }).then((res) => res.data),
 
+  // Departments
+  getDepartments: () =>
+    axiosInstance.get('/departments').then((res) => res.data),
+
+  createDepartment: (data) =>
+    axiosInstance.post('/departments', data).then((res) => res.data),
+
+  updateDepartment: (id, data) =>
+    axiosInstance.put(`/departments/${id}`, data).then((res) => res.data),
+
+  deleteDepartment: (id) =>
+    axiosInstance.delete(`/departments/${id}`).then((res) => res.data),
+
   // Settings
   getSettings: () =>
     axiosInstance.get('/settings').then((res) => res.data),

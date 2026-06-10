@@ -10,6 +10,7 @@ const AccessLog = require("./models/AccessLog");
 const Settings = require("./models/Settings");
 const hashToken = require("./utils/hashToken");
 const generateVerifyToken = require("./utils/generateVerifyToken");
+const Department = require("./models/Department");
 
 const seedData = async () => {
   try {
@@ -44,7 +45,24 @@ const seedData = async () => {
     });
     console.log("Settings created...");
 
-    // Create users
+    // Create Departments
+    const departmentsData = [
+      { name: "Computer Science", code: "CSC", description: "Department of Computer Science" },
+      { name: "Mathematics", code: "MTH", description: "Department of Mathematics" },
+      { name: "Physics", code: "PHY", description: "Department of Physics" },
+      { name: "Chemistry", code: "CHM", description: "Department of Chemistry" },
+      { name: "Biology", code: "BIO", description: "Department of Biology" },
+      { name: "Library Science", code: "LIB", description: "Library and Information Science" },
+      { name: "Engineering", code: "ENG", description: "Faculty of Engineering" },
+      { name: "Business Administration", code: "BUS", description: "Department of Business Administration" },
+      { name: "Accounting", code: "ACC", description: "Department of Accounting" },
+      { name: "Mass Communication", code: "MCM", description: "Department of Mass Communication" },
+      { name: "Library Administration", code: "ADM", description: "Library Administration" },
+      { name: "Library Services", code: "LSR", description: "Library Services Department" },
+    ];
+    await Department.insertMany(departmentsData);
+    console.log("Departments created...");
+
     const salt = await bcrypt.genSalt(10);
 
     const usersData = [

@@ -18,6 +18,7 @@ import AdminLogs from '../pages/admin/AccessLogs';
 import AdminRegisterAdmin from '../pages/admin/RegisterAdmin';
 import AdminReports from '../pages/admin/Reports';
 import AdminSettings from '../pages/admin/Settings';
+import AdminDepartments from '../pages/admin/Departments';
 
 import LibrarianDashboard from '../pages/librarian/Dashboard';
 import LibrarianVerify from '../pages/librarian/ScanVerify';
@@ -126,6 +127,16 @@ export default function AppRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={['admin']}>
               <AdminSettings />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/departments"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={['admin']}>
+              <AdminDepartments />
             </RoleRoute>
           </ProtectedRoute>
         }

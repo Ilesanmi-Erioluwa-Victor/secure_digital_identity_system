@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -12,7 +12,14 @@ import { isValidEmail } from '../../utils/validators';
 export default function RegisterAdmin() {
   const { control, handleSubmit, watch, formState: { errors } } = useForm();
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.getDepartments()
+      .then((res) => setDepartments(res.departments || []))
+      .catch(() => {});
+  }, []);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -97,7 +104,18 @@ export default function RegisterAdmin() {
                 name="department"
                 control={control}
                 render={({ field }) => (
-                  <Input label="Department (optional)" placeholder="e.g. Library Services" {...field} />
+                  <div className="w-full">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Department <span className="text-neutral-400">(optional)</span></label>
+                    <select
+                      {...field}
+                      className="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-primary focus:ring-primary/20"
+                    >
+                      <option value="">Select department</option>
+                      {departments.map((d) => (
+                        <option key={d._id} value={d.name}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 )}
               />
               <Controller

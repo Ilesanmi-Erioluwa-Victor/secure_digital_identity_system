@@ -17,6 +17,7 @@ const userRoutes = require("./routes/userRoutes");
 const accessLogRoutes = require("./routes/accessLogRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
+const departmentRoutes = require("./routes/departmentRoutes");
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/logs", accessLogRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/departments", departmentRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

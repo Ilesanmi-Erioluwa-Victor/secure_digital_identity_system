@@ -13,6 +13,7 @@ import {
   UserCircleIcon,
   ArrowLeftOnRectangleIcon,
   XMarkIcon,
+  BuildingOffice2Icon,
 } from '@heroicons/react/24/outline';
 
 const rolePrefix = {
@@ -31,6 +32,7 @@ const linkDefs = {
     { to: '/logs', label: 'Access Logs', icon: ClipboardDocumentListIcon },
     { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
     { to: '/settings', label: 'Settings', icon: Cog6ToothIcon },
+    { to: '/departments', label: 'Departments', icon: BuildingOffice2Icon },
   ],
   librarian: [
     { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
