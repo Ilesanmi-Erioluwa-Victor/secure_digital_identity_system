@@ -16,7 +16,14 @@ export default function Profile() {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [departments, setDepartments] = useState([]);
   const fileInputRef = useRef(null);
+  
+  useEffect(() => {
+    api.getDepartments()
+      .then((res) => setDepartments(res.departments || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -176,13 +183,19 @@ export default function Profile() {
                   name="department"
                   control={control}
                   render={({ field }) => (
-                    <Input
-                      label="Department"
-                      type="text"
-                      placeholder="Enter your department"
-                      error={errors.department?.message}
-                      {...field}
-                    />
+                    <div className="w-full">
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">Department</label>
+                      <select
+                        {...field}
+                        className="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-primary focus:ring-primary/20"
+                      >
+                        <option value="">Select department</option>
+                        {departments.map((d) => (
+                          <option key={d._id} value={d.name}>{d.name}</option>
+                        ))}
+                      </select>
+                      {errors.department && <p className="mt-1 text-sm text-status-revoked">{errors.department.message}</p>}
+                    </div>
                   )}
                 />
               </div>
