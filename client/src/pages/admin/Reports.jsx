@@ -32,7 +32,7 @@ export default function Reports() {
         setSummary(s.summary || s);
         setMonthlyIssuance(m.data || m || []);
         setDailyScans(a.dailyScans || a.data || a || []);
-        setRoleBreakdown(r.data || r || []);
+        setRoleBreakdown(r.roleBreakdown || r.data || []);
       } catch { toast.error('Failed to load report data'); }
       finally { setLoading(false); }
     };
@@ -137,40 +137,52 @@ export default function Reports() {
 
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Monthly Issuance (Last 12 Months)</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={monthlyIssuance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#0A3D6B" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {Array.isArray(monthlyIssuance) && monthlyIssuance.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={monthlyIssuance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#0A3D6B" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No issuance data available</p>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Daily QR Scan Activity (Last 14 Days)</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={dailyScans}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="scans" fill="#1565A8" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {Array.isArray(dailyScans) && dailyScans.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={dailyScans}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F8" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="scans" fill="#1565A8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No scan data available</p>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 className="text-sm font-semibold text-neutral-700 mb-4">Identities by Role</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie data={roleBreakdown} cx="50%" cy="50%" outerRadius={120} dataKey="count" nameKey="role" label={({ role, count }) => `${role} (${count})`}>
-                  {roleBreakdown.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {Array.isArray(roleBreakdown) && roleBreakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                  <Pie data={roleBreakdown} cx="50%" cy="50%" outerRadius={120} dataKey="count" nameKey="role" label={({ role, count }) => `${role} (${count})`}>
+                    {roleBreakdown.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-16">No role data available</p>
+            )}
           </div>
         </div>
       </div>
