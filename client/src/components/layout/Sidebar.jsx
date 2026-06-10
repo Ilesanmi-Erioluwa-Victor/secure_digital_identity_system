@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
   IdentificationIcon,
@@ -50,6 +50,7 @@ const linkDefs = {
 };
 
 export default function Sidebar({ role = 'admin', isOpen, onClose }) {
+  const navigate = useNavigate();
   const prefix = rolePrefix[role] || '/user';
   const links = (linkDefs[role] || linkDefs.user).map((link) => ({
     ...link,
@@ -108,7 +109,13 @@ export default function Sidebar({ role = 'admin', isOpen, onClose }) {
         </nav>
 
         <div className="p-3 border-t border-white/10">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors w-full">
+          <button
+            onClick={() => {
+              localStorage.removeItem('accessToken');
+              navigate('/login', { replace: true });
+            }}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors w-full"
+          >
             <ArrowLeftOnRectangleIcon className="h-5 w-5" />
             Logout
           </button>
