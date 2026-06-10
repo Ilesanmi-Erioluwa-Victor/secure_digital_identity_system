@@ -88,7 +88,7 @@ export default function Security() {
 
   const handleVerifyTOTP = async (token) => {
     try {
-      await api.enableTOTP(token);
+      await api.enableTOTP(token, setupData?.secret);
       toast.success('Authenticator app enabled successfully');
       setShowSetup(false);
       setSetupData(null);

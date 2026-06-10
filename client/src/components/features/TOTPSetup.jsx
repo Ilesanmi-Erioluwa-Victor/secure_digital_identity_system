@@ -9,7 +9,7 @@ export default function TOTPSetup({ setupData, onEnabled }) {
 
   if (!setupData) return null;
 
-  const { qrCodeUrl, secret } = setupData;
+  const { qrCode: qrCodeUrl, secret } = setupData;
 
   const handleVerify = async () => {
     if (code.length !== 6) {

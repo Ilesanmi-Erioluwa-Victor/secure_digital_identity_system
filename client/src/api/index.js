@@ -97,8 +97,8 @@ const api = {
   getTOTPSetup: () =>
     axiosInstance.get('/auth/totp/setup').then((res) => res.data),
 
-  enableTOTP: (token) =>
-    axiosInstance.post('/auth/totp/enable', { token }).then((res) => res.data),
+  enableTOTP: (token, secret) =>
+    axiosInstance.post('/auth/totp/enable', { token, secret }).then((res) => res.data),
 
   disableTOTP: (password) =>
     axiosInstance.post('/auth/totp/disable', { password }).then((res) => res.data),
