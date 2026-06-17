@@ -8,6 +8,7 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const { errorHandler } = require("./middleware/errorMiddleware");
 const startExpiryScheduler = require("./jobs/expiryScheduler");
+const { initTransporter } = require("./config/email");
 
 // Route imports
 const authRoutes = require("./routes/authRoutes");
@@ -23,9 +24,6 @@ const app = express();
 
 // Trust Render proxy for rate limiter
 app.set('trust proxy', 1);
-
-// Connect to database
-connectDB();
 
 // Middleware
 app.use(
@@ -66,7 +64,8 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 // Wait for DB connection then start server
-connectDB().then(() => {
+connectDB().then(async () => {
+  await initTransporter();
   startExpiryScheduler();
   app.listen(PORT, () => {
     console.log(
