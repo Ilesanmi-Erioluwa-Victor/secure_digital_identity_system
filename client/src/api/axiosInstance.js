@@ -39,7 +39,9 @@ axiosInstance.interceptors.response.use(
 
     const isPublicAuth = ['/auth/login', '/auth/register', '/auth/verify-otp', '/auth/verify-totp', '/auth/forgot-password', '/auth/reset-password'].some((p) => originalRequest.url?.includes(p));
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isPublicAuth) {
+    const hadToken = !!originalRequest.headers?.Authorization;
+
+    if (error.response?.status === 401 && !originalRequest._retry && hadToken && !isPublicAuth) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
