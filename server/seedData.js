@@ -68,7 +68,7 @@ const seedData = async () => {
     const usersData = [
       {
         fullName: "Admin User",
-        email: "admin@dspoly.edu.ng",
+        email: "terencegoodnews@gmail.com",
         password: await bcrypt.hash("Admin@1234", salt),
         role: "admin",
         staffID: "ADMIN-0001",
@@ -420,7 +420,7 @@ const seedData = async () => {
     console.log("========================================");
     console.log("\nTest Accounts:");
     console.log("----------------------------------------");
-    console.log("Admin:     admin@dspoly.edu.ng / Admin@1234");
+    console.log("Admin:     terencegoodnews@gmail.com / Admin@1234");
     console.log("Librarian: librarian@dspoly.edu.ng / Lib@1234");
     console.log("Student:   student@dspoly.edu.ng / Student@1234");
     console.log("Staff:     staff@dspoly.edu.ng / Staff@1234");
