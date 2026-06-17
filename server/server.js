@@ -21,6 +21,9 @@ const departmentRoutes = require("./routes/departmentRoutes");
 
 const app = express();
 
+// Trust Render proxy for rate limiter
+app.set('trust proxy', 1);
+
 // Connect to database
 connectDB();
 
