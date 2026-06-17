@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 let transporter = null;
 
 if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS !== 'your_gmail_app_password') {
-  const emailPort = parseInt(process.env.EMAIL_PORT, 10) || 465;
+  const emailPort = parseInt(process.env.EMAIL_PORT, 10) || 587;
   console.log(`[EMAIL] Creating transporter: host=${process.env.EMAIL_HOST}, port=${emailPort}, secure=${emailPort === 465}`);
   transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
