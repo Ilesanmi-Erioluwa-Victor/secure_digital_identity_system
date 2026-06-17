@@ -5,8 +5,8 @@ let transporter = null;
 if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS !== 'your_gmail_app_password') {
   transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT, 10),
-    secure: false,
+    port: parseInt(process.env.EMAIL_PORT, 10) || 465,
+    secure: process.env.EMAIL_PORT === '465',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
