@@ -126,15 +126,11 @@ const login = asyncHandler(async (req, res) => {
     user.otpCode = hashedOtp;
     user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: 'Your OTP Code',
-        html: `<h2>Your One-Time Password</h2><p>Your OTP code is: <strong>${otp}</strong></p><p>This code expires in 5 minutes.</p><p>If you did not request this, please ignore.</p>`,
-      });
-    } catch (emailErr) {
-      console.error('OTP email failed:', emailErr.message);
-    }
+    sendEmail({
+      to: user.email,
+      subject: 'Your OTP Code',
+      html: `<h2>Your One-Time Password</h2><p>Your OTP code is: <strong>${otp}</strong></p><p>This code expires in 5 minutes.</p><p>If you did not request this, please ignore.</p>`,
+    }).catch((err) => console.error('OTP email failed:', err.message));
     console.log(`\n========== OTP for ${user.email} ==========`);
     console.log(`  OTP: ${otp}`);
     console.log(`  Expires in 5 minutes`);
