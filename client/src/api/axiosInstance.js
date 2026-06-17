@@ -14,8 +14,10 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 const axiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: API_URL,
   withCredentials: true,
 });
 
@@ -51,7 +53,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
         const newToken = data.accessToken;
         localStorage.setItem('accessToken', newToken);
         processQueue(null, newToken);
