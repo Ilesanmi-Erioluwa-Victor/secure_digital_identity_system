@@ -126,11 +126,21 @@ const login = asyncHandler(async (req, res) => {
     user.otpCode = hashedOtp;
     user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
+    console.log(`\n[EMAIL] Attempting to send OTP to ${user.email}...`);
+    console.log(`[EMAIL] EMAIL_HOST=${process.env.EMAIL_HOST || 'NOT SET'}`);
+    console.log(`[EMAIL] EMAIL_PORT=${process.env.EMAIL_PORT || 'NOT SET (defaults to 465)'}`);
+    console.log(`[EMAIL] EMAIL_USER=${process.env.EMAIL_USER || 'NOT SET'}`);
+    console.log(`[EMAIL] EMAIL_PASS set: ${process.env.EMAIL_PASS ? 'YES (length=' + process.env.EMAIL_PASS.length + ')' : 'NO'}`);
+    console.log(`[EMAIL] EMAIL_FROM=${process.env.EMAIL_FROM || 'NOT SET'}`);
+
     sendEmail({
       to: user.email,
       subject: 'Your OTP Code',
       html: `<h2>Your One-Time Password</h2><p>Your OTP code is: <strong>${otp}</strong></p><p>This code expires in 5 minutes.</p><p>If you did not request this, please ignore.</p>`,
-    }).catch((err) => console.error('OTP email failed:', err.message));
+    })
+      .then((info) => console.log(`[EMAIL] SENT successfully. MessageId: ${info.messageId}`))
+      .catch((err) => console.error(`[EMAIL] FAILED:`, err.message, err.code || ''));
+
     console.log(`\n========== OTP for ${user.email} ==========`);
     console.log(`  OTP: ${otp}`);
     console.log(`  Expires in 5 minutes`);

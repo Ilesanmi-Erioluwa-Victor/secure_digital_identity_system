@@ -4,6 +4,7 @@ let transporter = null;
 
 if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS !== 'your_gmail_app_password') {
   const emailPort = parseInt(process.env.EMAIL_PORT, 10) || 465;
+  console.log(`[EMAIL] Creating transporter: host=${process.env.EMAIL_HOST}, port=${emailPort}, secure=${emailPort === 465}`);
   transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: emailPort,
@@ -16,6 +17,9 @@ if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS !
       pass: process.env.EMAIL_PASS,
     },
   });
+  transporter.verify().then(() => console.log('[EMAIL] Transporter verified OK')).catch((e) => console.error('[EMAIL] Transporter verify FAILED:', e.message));
+} else {
+  console.log('[EMAIL] Transporter NOT created — missing env vars or placeholder password');
 }
 
 const sendEmail = async ({ to, subject, html }) => {
