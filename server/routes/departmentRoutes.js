@@ -10,8 +10,8 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
-router.get('/', protect, getAllDepartments);
-router.get('/:id', protect, getDepartment);
+router.get('/', getAllDepartments);
+router.get('/:id', getDepartment);
 router.post('/', protect, roleMiddleware('admin'), createDepartment);
 router.put('/:id', protect, roleMiddleware('admin'), updateDepartment);
 router.delete('/:id', protect, roleMiddleware('admin'), deleteDepartment);
